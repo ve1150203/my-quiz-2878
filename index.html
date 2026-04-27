@@ -3,58 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工程題庫模擬測驗 - 詳解模式</title>
+    <title>工程題庫模擬測驗 - 增強版</title>
     <style>
         :root { --primary: #2563eb; --correct-bg: #dcfce7; --wrong-bg: #fee2e2; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: #f1f5f9; padding: 15px; line-height: 1.6; }
         .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+        
+        /* 錯題複習區 */
+        .review-section { margin: 20px 0; padding: 15px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; text-align: center; }
+        .review-btn { background: #f59e0b; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-size: 0.9rem; }
+        .review-btn:hover { background: #d97706; }
+
         .summary-box { display: none; text-align: center; font-size: 1.8rem; font-weight: bold; margin: 20px 0; padding: 20px; background: #fff; border: 3px solid var(--primary); border-radius: 10px; }
         .q-block { margin-bottom: 20px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
         .q-text { font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; display: block; }
-        .opt-label { display: block; padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #eee; cursor: pointer; transition: 0.2s; }
-        .opt-label:hover { background: #f8fafc; }
+        .opt-label { display: block; padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #eee; cursor: pointer; }
         
-        /* 對錯顏色標示 */
-        .q-block.is-correct { background-color: var(--correct-bg); border-color: #86efac; }
-        .q-block.is-wrong { background-color: var(--wrong-bg); border-color: #fca5a5; }
+        .q-block.is-correct { background-color: var(--correct-bg); }
+        .q-block.is-wrong { background-color: var(--wrong-bg); }
         .correct-ans-tip { color: #166534; font-weight: bold; margin-top: 10px; display: none; padding-top: 10px; border-top: 1px dashed #ccc; }
         .opt-label.final-correct { border: 2px solid #16a34a; background-color: #f0fdf4; font-weight: bold; }
         
         .btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.2rem; cursor: pointer; font-weight: bold; margin-top: 20px; }
-        .reload-btn { background: #64748b; margin-top: 10px; }
+        
+        /* 回到最頂端按鈕 */
+        #back-to-top { display: none; position: fixed; bottom: 30px; right: 30px; background: var(--primary); color: white; width: 50px; height: 50px; border-radius: 50%; text-align: center; line-height: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 1000; font-size: 1.5rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>2878題模擬測驗</h1>
+    <h1>工程題庫模擬測驗</h1>
+    
+    <div class="review-section">
+        <div style="font-weight: bold; margin-bottom: 10px; color: #92400e;">⚠️ 最近三次錯題複習</div>
+        <div id="history-btns">尚未有測驗紀錄</div>
+    </div>
+
     <div id="summary" class="summary-box"></div>
-    <div id="quiz-box">正在從 quiz_data.js 載入題庫...</div>
+    <div id="quiz-box">載入中...</div>
     <button id="submit-btn" class="btn">提交評分並查看正確答案</button>
 </div>
+
+<div id="back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">↑</div>
 
 <script src="quiz_data.js"></script>
 
 <script>
+let currentQuestions = [];
+
 window.onload = function() {
     if (typeof allQuestions === 'undefined') {
-        document.getElementById('quiz-box').innerHTML = "<b>錯誤：</b>找不到 quiz_data.js 資料檔，請確保檔案放在同一個資料夾。";
-        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('quiz-box').innerHTML = "找不到 quiz_data.js 資料";
         return;
     }
+    renderHistory();
+    startNewQuiz();
+};
 
-    // 隨機抽選 100 題
-    const selected = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 100);
+// 1. 開始一般新測驗 (隨機 100 題)
+function startNewQuiz() {
+    currentQuestions = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 100);
+    renderQuiz(currentQuestions);
+    document.getElementById('summary').style.display = 'none';
+    document.getElementById('submit-btn').style.display = 'block';
+}
+
+// 2. 進入錯題複習模式
+function startReview(ids) {
+    currentQuestions = allQuestions.filter(q => ids.includes(String(q.id)) || ids.includes(Number(q.id)));
+    renderQuiz(currentQuestions);
+    document.getElementById('summary').style.display = 'none';
+    document.getElementById('submit-btn').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 3. 渲染題目到畫面上
+function renderQuiz(questions) {
     const box = document.getElementById('quiz-box');
-
-    box.innerHTML = selected.map((q, i) => `
+    box.innerHTML = questions.map((q, i) => `
         <div class="q-block" id="block-${i}">
-            <span class="q-text">${i + 1}. ${q.q} <small style="color: #64748b; font-weight: normal;">(題庫第 ${q.id} 題)</small></span>
+            <span class="q-text">${i + 1}. ${q.q} <small style="color:#94a3b8; font-weight:normal;">(題庫第 ${q.id} 題)</small></span>
             <div class="options">
                 ${q.o.map(opt => {
-                    const letterMatch = opt.match(/\(([A-D])\)/);
-                    const letter = letterMatch ? letterMatch[1] : "";
+                    const letter = opt.match(/\(([A-D])\)/) ? opt.match(/\(([A-D])\)/)[1] : "";
                     return `
                         <label class="opt-label" data-letter="${letter}">
                             <input type="radio" name="q${i}" value="${letter}"> ${opt}
@@ -65,43 +98,79 @@ window.onload = function() {
             <div class="correct-ans-tip" id="tip-${i}">正確答案：(${q.a})</div>
         </div>
     `).join('');
+}
 
-    document.getElementById('submit-btn').onclick = function() {
-        let score = 0;
-        selected.forEach((q, i) => {
-            const block = document.getElementById(`block-${i}`);
-            const tip = document.getElementById(`tip-${i}`);
-            const sel = document.querySelector(`input[name="q${i}"]:checked`);
-            const allLabels = block.querySelectorAll('.opt-label');
+// 4. 提交評分邏輯
+document.getElementById('submit-btn').onclick = function() {
+    let score = 0;
+    let wrongIds = [];
 
-            // 1. 顯示正確答案提示
-            tip.style.display = 'block';
+    currentQuestions.forEach((q, i) => {
+        const block = document.getElementById(`block-${i}`);
+        const tip = document.getElementById(`tip-${i}`);
+        const sel = document.querySelector(`input[name="q${i}"]:checked`);
+        const allLabels = block.querySelectorAll('.opt-label');
 
-            // 2. 標示正確的選項樣式
-            allLabels.forEach(label => {
-                if (label.getAttribute('data-letter') === q.a) {
-                    label.classList.add('final-correct');
-                    label.innerHTML += " ✅";
-                }
-            });
-
-            // 3. 比對對錯並變更題塊顏色
-            if (sel && sel.value === q.a) {
-                score++;
-                block.classList.add('is-correct');
-            } else {
-                block.classList.add('is-wrong');
+        tip.style.display = 'block';
+        allLabels.forEach(label => {
+            if (label.getAttribute('data-letter') === q.a) {
+                label.classList.add('final-correct');
+                label.innerHTML += " ✅";
             }
         });
 
-        // 顯示總成績
-        const sumBox = document.getElementById('summary');
-        sumBox.style.display = 'block';
-        sumBox.innerHTML = `測驗得分：${score} / 100 <br> <button onclick="location.reload()" class="btn reload-btn">重新抽題考試</button>`;
-        
-        this.style.display = 'none';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+        if (sel && sel.value === q.a) {
+            score++;
+            block.classList.add('is-correct');
+        } else {
+            block.classList.add('is-wrong');
+            wrongIds.push(q.id); // 紀錄錯題 ID
+        }
+    });
+
+    // 儲存錯題紀錄
+    if (wrongIds.length > 0) {
+        saveHistory(wrongIds);
+        renderHistory();
+    }
+
+    const sumBox = document.getElementById('summary');
+    sumBox.style.display = 'block';
+    sumBox.innerHTML = `得分：${score} / ${currentQuestions.length} <br> <button onclick="startNewQuiz()" class="btn" style="background:#64748b; width:auto; padding:10px 20px;">重新隨機考 100 題</button>`;
+    
+    this.style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// 儲存到手機/電腦 LocalStorage
+function saveHistory(ids) {
+    let history = JSON.parse(localStorage.getItem('quiz_history') || '[]');
+    history.unshift(ids);
+    if (history.length > 3) history.pop();
+    localStorage.setItem('quiz_history', JSON.stringify(history));
+}
+
+// 顯示歷史按鈕
+function renderHistory() {
+    const history = JSON.parse(localStorage.getItem('quiz_history') || '[]');
+    const container = document.getElementById('history-btns');
+    if (history.length === 0) return;
+
+    container.innerHTML = history.map((ids, index) => 
+        `<button class="review-btn" onclick='startReview(${JSON.stringify(ids)})'>
+            第 ${index + 1} 次錯題 (${ids.length}題)
+        </button>`
+    ).join('');
+}
+
+// 回到頂端按鈕控制
+window.onscroll = function() {
+    const btt = document.getElementById('back-to-top');
+    if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
+        btt.style.display = "block";
+    } else {
+        btt.style.display = "none";
+    }
 };
 </script>
 </body>
