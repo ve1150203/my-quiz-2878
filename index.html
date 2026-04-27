@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工程題庫模擬測驗 - 詳解模式</title>
+    <style>
+        :root { --primary: #2563eb; --correct-bg: #dcfce7; --wrong-bg: #fee2e2; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: #f1f5f9; padding: 15px; line-height: 1.6; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); margin-bottom: 5px; }
+        .summary-box { display: none; text-align: center; font-size: 1.8rem; font-weight: bold; margin: 20px 0; padding: 20px; background: #fff; border: 3px solid var(--primary); border-radius: 10px; }
+        .q-block { margin-bottom: 20px; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
+        .q-text { font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; display: block; }
+        .opt-label { display: block; padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+        .opt-label:hover { background: #f8fafc; }
+        
+        /* 對錯顏色標示 */
+        .q-block.is-correct { background-color: var(--correct-bg); border-color: #86efac; }
+        .q-block.is-wrong { background-color: var(--wrong-bg); border-color: #fca5a5; }
+        .correct-ans-tip { color: #166534; font-weight: bold; margin-top: 10px; display: none; padding-top: 10px; border-top: 1px dashed #ccc; }
+        .opt-label.final-correct { border: 2px solid #16a34a; background-color: #f0fdf4; font-weight: bold; }
+        
+        .btn { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.2rem; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        .reload-btn { background: #64748b; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>2878題模擬測驗</h1>
+    <div id="summary" class="summary-box"></div>
+    <div id="quiz-box">正在從 quiz_data.js 載入題庫...</div>
+    <button id="submit-btn" class="btn">提交評分並查看正確答案</button>
+</div>
+
+<script src="quiz_data.js"></script>
+
+<script>
+window.onload = function() {
+    if (typeof allQuestions === 'undefined') {
+        document.getElementById('quiz-box').innerHTML = "<b>錯誤：</b>找不到 quiz_data.js 資料檔，請確保檔案放在同一個資料夾。";
+        document.getElementById('submit-btn').style.display = 'none';
+        return;
+    }
+
+    // 隨機抽選 100 題
+    const selected = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 100);
+    const box = document.getElementById('quiz-box');
+
+    box.innerHTML = selected.map((q, i) => `
+        <div class="q-block" id="block-${i}">
+            <span class="q-text">${i + 1}. ${q.q}</span>
+            <div class="options">
+                ${q.o.map(opt => {
+                    const letterMatch = opt.match(/\(([A-D])\)/);
+                    const letter = letterMatch ? letterMatch[1] : "";
+                    return `
+                        <label class="opt-label" data-letter="${letter}">
+                            <input type="radio" name="q${i}" value="${letter}"> ${opt}
+                        </label>
+                    `;
+                }).join('')}
+            </div>
+            <div class="correct-ans-tip" id="tip-${i}">正確答案：(${q.a})</div>
+        </div>
+    `).join('');
+
+    document.getElementById('submit-btn').onclick = function() {
+        let score = 0;
+        selected.forEach((q, i) => {
+            const block = document.getElementById(`block-${i}`);
+            const tip = document.getElementById(`tip-${i}`);
+            const sel = document.querySelector(`input[name="q${i}"]:checked`);
+            const allLabels = block.querySelectorAll('.opt-label');
+
+            // 1. 顯示正確答案提示
+            tip.style.display = 'block';
+
+            // 2. 標示正確的選項樣式
+            allLabels.forEach(label => {
+                if (label.getAttribute('data-letter') === q.a) {
+                    label.classList.add('final-correct');
+                    label.innerHTML += " ✅";
+                }
+            });
+
+            // 3. 比對對錯並變更題塊顏色
+            if (sel && sel.value === q.a) {
+                score++;
+                block.classList.add('is-correct');
+            } else {
+                block.classList.add('is-wrong');
+            }
+        });
+
+        // 顯示總成績
+        const sumBox = document.getElementById('summary');
+        sumBox.style.display = 'block';
+        sumBox.innerHTML = `測驗得分：${score} / 100 <br> <button onclick="location.reload()" class="btn reload-btn">重新抽題考試</button>`;
+        
+        this.style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+};
+</script>
+</body>
+</html>
