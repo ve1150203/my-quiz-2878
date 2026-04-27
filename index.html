@@ -50,7 +50,7 @@ window.onload = function() {
 
     box.innerHTML = selected.map((q, i) => `
         <div class="q-block" id="block-${i}">
-            <span class="q-text">${i + 1}. ${q.q}</span>
+            <span class="q-text">${i + 1}. ${q.q} <small style="color: #64748b; font-weight: normal;">(題庫第 ${q.id} 題)</small></span>
             <div class="options">
                 ${q.o.map(opt => {
                     const letterMatch = opt.match(/\(([A-D])\)/);
