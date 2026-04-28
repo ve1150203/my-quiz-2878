@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VE11502期品管班2878題模擬測驗</title>
+    <title>工程題庫模擬測驗 - 專業版</title>
     <style>
         :root { --primary: #2563eb; --correct-bg: #dcfce7; --wrong-bg: #fee2e2; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: #f1f5f9; padding: 15px; line-height: 1.6; }
         .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: var(--primary); margin-bottom: 5px; }
         
-        /* 題目數量選擇區 */
+        /* 題數選擇區 */
         .mode-section { margin: 15px 0; padding: 15px; background: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 8px; text-align: center; }
         .mode-btn { background: #0ea5e9; color: white; padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-size: 16px; transition: 0.3s; }
         .mode-btn:hover { background: #0284c7; }
@@ -22,12 +22,11 @@
 
         .question { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dashed #cbd5e1; }
         .q-text { font-weight: bold; font-size: 17px; margin-bottom: 12px; }
+        .q-id-tag { color: #64748b; font-size: 0.9em; margin-left: 8px; font-weight: normal; } /* 題號標籤樣式 */
         .option { display: block; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; margin-bottom: 8px; transition: 0.2s; }
         .option:hover { background: #f8fafc; }
         
         input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
-        
-        /* 狀態顏色 */
         .correct { background: var(--correct-bg) !important; border-color: #86efac !important; }
         .wrong { background: var(--wrong-bg) !important; border-color: #fca5a5 !important; }
         
@@ -40,7 +39,7 @@
 <body>
 
 <div class="container">
-    <h1>🏗️ VE11502期品管班2878題模擬測驗</h1>
+    <h1>🏗️ VE11502期品管班模擬測驗</h1>
     
     <div class="mode-section">
         <p style="margin-top:0; font-weight:bold; color:#0369a1;">選擇隨機測驗題數：</p>
@@ -54,11 +53,9 @@
         <div id="history-btns"></div>
     </div>
 
-    <div id="quiz-container">
-        </div>
+    <div id="quiz-container"></div>
 
     <button id="submit-btn" class="btn" onclick="submitQuiz()" style="display:none;">提交所有答案</button>
-    
     <div id="summary"></div>
 </div>
 
@@ -66,23 +63,15 @@
 
 <script>
     let currentQuestions = [];
-    let lastChosenCount = 100; // 記錄上次選擇的題數
+    let lastChosenCount = 30; 
 
-    // 初始化：預設顯示最近的錯題紀錄
-    window.onload = () => {
-        renderHistory();
-        // 預設不自動開始，讓使用者自己選題數
-    };
+    window.onload = () => { renderHistory(); };
 
-    // 開始新測驗：可指定數量
     function startNewQuiz(count = 100) {
         lastChosenCount = count;
-        // 隨機打亂
         let shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
-        // 擷取指定數量
         currentQuestions = shuffled.slice(0, count);
         
-        // 重置介面
         document.getElementById('summary').style.display = 'none';
         document.getElementById('quiz-container').innerHTML = '';
         document.getElementById('submit-btn').style.display = 'block';
@@ -91,12 +80,14 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 渲染題目
     function renderQuiz() {
         const container = document.getElementById('quiz-container');
         container.innerHTML = currentQuestions.map((q, index) => `
             <div class="question" id="q-box-${index}">
-                <div class="q-text">${index + 1}. ${q.q}</div>
+                <div class="q-text">
+                    ${index + 1}. ${q.q} 
+                    <span class="q-id-tag">『題庫 ${q.id}』</span>
+                </div>
                 ${q.o.map((opt, i) => {
                     const val = ["A", "B", "C", "D"][i];
                     return `
@@ -113,7 +104,6 @@
         `).join('');
     }
 
-    // 提交答案
     function submitQuiz() {
         let score = 0;
         let wrongIds = [];
@@ -121,7 +111,6 @@
         currentQuestions.forEach((q, index) => {
             const selected = document.querySelector(`input[name="q${index}"]:checked`);
             const ansDiv = document.getElementById(`ans-${index}`);
-            const qBox = document.getElementById(`q-box-${index}`);
             
             if (selected) {
                 if (selected.value === q.a) {
@@ -134,14 +123,12 @@
                     ansDiv.style.display = 'block';
                 }
             } else {
-                // 未選也算錯
                 wrongIds.push(q.id);
                 document.getElementById(`opt-${index}-${q.a}`).classList.add('correct');
                 ansDiv.style.display = 'block';
             }
         });
 
-        // 儲存錯題
         if (wrongIds.length > 0) {
             saveHistory(wrongIds);
             renderHistory();
@@ -158,7 +145,6 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 錯題複習功能
     function startReview(ids) {
         currentQuestions = allQuestions.filter(q => ids.includes(q.id));
         document.getElementById('summary').style.display = 'none';
@@ -168,7 +154,6 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 儲存到 LocalStorage
     function saveHistory(ids) {
         let history = JSON.parse(localStorage.getItem('quiz_history') || '[]');
         history.unshift(ids);
@@ -176,25 +161,10 @@
         localStorage.setItem('quiz_history', JSON.stringify(history));
     }
 
-    // 顯示歷史按鈕
     function renderHistory() {
         const history = JSON.parse(localStorage.getItem('quiz_history') || '[]');
         const section = document.getElementById('history-section');
         const container = document.getElementById('history-btns');
-        
-        if (history.length === 0) {
-            section.style.display = 'none';
-            return;
-        }
-
+        if (history.length === 0) { section.style.display = 'none'; return; }
         section.style.display = 'block';
-        container.innerHTML = history.map((ids, index) => 
-            `<button class="review-btn" onclick='startReview(${JSON.stringify(ids)})'>
-                第 ${index + 1} 次錯題 (${ids.length}題)
-            </button>`
-        ).join('');
-    }
-</script>
-
-</body>
-</html>
+        container
