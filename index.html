@@ -10,19 +10,17 @@
         .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: var(--primary); margin-bottom: 5px; }
         
-        /* 題數選擇區 - 這次新增的選單 */
+        /* 題數選擇區 */
         .mode-section { margin: 15px 0; padding: 15px; background: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 8px; text-align: center; }
         .mode-btn { background: #0ea5e9; color: white; padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-size: 16px; transition: 0.3s; }
         .mode-btn:hover { background: #0284c7; }
 
-        /* 錯題複習區 */
         .review-section { margin: 10px 0 20px 0; padding: 15px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; text-align: center; }
-        .review-btn { background: #f59e0b; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; transition: 0.3s; }
+        .review-btn { background: #f59e0b; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
 
         .question { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dashed #cbd5e1; }
         .q-text { font-weight: bold; font-size: 17px; margin-bottom: 12px; }
-        
-        /* 這裡就是您要的『題庫 XX』樣式 */
+        /* 您要求的題庫標籤 */
         .q-id-tag { color: #2563eb; font-size: 0.9em; margin-left: 8px; font-weight: bold; background: #eff6ff; padding: 2px 6px; border-radius: 4px; } 
 
         .option { display: block; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; margin-bottom: 8px; }
@@ -61,18 +59,17 @@
 
 <script>
     let currentQuestions = [];
-    let lastChosenCount = 30; // 預設記錄
+    let lastCount = 30;
 
     window.onload = () => { renderHistory(); };
 
-    // 2. 優化：開始測驗函式，會根據傳入的數量隨機抽題
-    function startNewQuiz(count = 100) {
-        lastChosenCount = count;
-        // 打亂題庫
+    function startNewQuiz(count) {
+        lastCount = count;
+        // 打亂並取出指定題數
         let shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
-        // 依照所選題數切出題目
         currentQuestions = shuffled.slice(0, count);
         
+        // 介面重置
         document.getElementById('summary').style.display = 'none';
         document.getElementById('quiz-container').innerHTML = '';
         document.getElementById('submit-btn').style.display = 'block';
@@ -81,14 +78,12 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 3. 重點：渲染題目，並在題目最後加上『題庫 ID』
     function renderQuiz() {
         const container = document.getElementById('quiz-container');
         container.innerHTML = currentQuestions.map((q, index) => `
             <div class="question" id="q-box-${index}">
                 <div class="q-text">
-                    ${index + 1}. ${q.q} 
-                    <span class="q-id-tag">『題庫 ${q.id}』</span>
+                    ${index + 1}. ${q.q} <span class="q-id-tag">『題庫 ${q.id}』</span>
                 </div>
                 ${q.o.map((opt, i) => {
                     const val = ["A", "B", "C", "D"][i];
@@ -139,8 +134,8 @@
         const sumBox = document.getElementById('summary');
         sumBox.style.display = 'block';
         sumBox.innerHTML = `得分：${score} / ${currentQuestions.length} <br> 
-            <button onclick="startNewQuiz(${lastChosenCount})" class="btn" style="background:#64748b; width:auto; padding:10px 20px; margin: 10px auto;">
-                重新隨機考 ${lastChosenCount} 題
+            <button onclick="startNewQuiz(${lastCount})" class="btn" style="background:#64748b; width:auto; padding:10px 20px; margin: 10px auto;">
+                重新隨機考 ${lastCount} 題
             </button>`;
         
         document.getElementById('submit-btn').style.display = 'none';
@@ -157,4 +152,24 @@
     }
 
     function saveHistory(ids) {
-        let history = JSON.parse(localStorage.getItem('
+        let history = JSON.parse(localStorage.getItem('quiz_history') || '[]');
+        history.unshift(ids);
+        if (history.length > 3) history.pop();
+        localStorage.setItem('quiz_history', JSON.stringify(history));
+    }
+
+    function renderHistory() {
+        const history = JSON.parse(localStorage.getItem('quiz_history') || '[]');
+        const section = document.getElementById('history-section');
+        const container = document.getElementById('history-btns');
+        if (history.length === 0) return;
+        section.style.display = 'block';
+        container.innerHTML = history.map((ids, index) => 
+            `<button class="review-btn" onclick='startReview(${JSON.stringify(ids)})'>
+                第 ${index + 1} 次錯題 (${ids.length}題)
+            </button>`
+        ).join('');
+    }
+</script>
+</body>
+</html>
