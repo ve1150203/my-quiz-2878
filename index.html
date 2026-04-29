@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工程品管測驗系統</title>
+    <title>工程品管測驗系統 - 複習優化版</title>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
@@ -17,7 +17,7 @@
         .unit-tag { background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .q-text { font-size: 20px; font-weight: bold; margin-bottom: 20px; line-height: 1.6; }
         .options-grid { display: grid; gap: 12px; }
-        .opt-btn { padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; text-align: left; cursor: pointer; font-size: 16px; width: 100%; }
+        .opt-btn { padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; text-align: left; cursor: pointer; font-size: 16px; width: 100%; transition: 0.2s; }
         .opt-btn.correct { background: #dcfce7 !important; border-color: #22c55e !important; color: #166534; font-weight: bold; }
         .opt-btn.wrong { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
         #noteBox { margin-top: 20px; padding: 15px; background: #fff7ed; border-left: 5px solid #f97316; border-radius: 8px; display: none; color: #9a3412; }
@@ -65,7 +65,7 @@
             </select>
         </div>
         <button class="btn btn-primary" onclick="startQuiz(false)">開始測驗</button>
-        <button id="reviewBtn" class="btn btn-review" onclick="startQuiz(true)">📖 錯題複習 (近二次)</button>
+        <button id="reviewBtn" class="btn btn-review" onclick="startQuiz(true)">📖 錯題複習</button>
     </div>
 
     <div id="quiz" class="quiz-card">
@@ -86,28 +86,29 @@
 <script>
     let quizPool = [];
     let currentIndex = 0;
-    let currentSessionWrongs = []; // 本次測驗的錯題
+    let isReviewMode = false; // 追蹤目前是否為複習模式
 
     // 錯題歷史紀錄 (儲存格式：[ [session1_ids], [session2_ids] ])
-    let wrongHistory = JSON.parse(localStorage.getItem('wrong_history_v2') || '[]');
+    let wrongHistory = JSON.parse(localStorage.getItem('wrong_history_v3') || '[]');
 
     window.onload = () => {
         updateReviewButton();
     };
 
     function updateReviewButton() {
-        // 合併最近兩次的錯題 ID
+        // 合併最近兩次的所有不重複錯題 ID
         let lastTwoWrongs = [...new Set(wrongHistory.flat())];
         const btn = document.getElementById('reviewBtn');
         if (lastTwoWrongs.length > 0) {
             btn.style.display = 'block';
-            btn.innerText = `📖 錯題複習 (共 ${lastTwoWrongs.length} 題)`;
+            btn.innerText = `📖 錯題複習 (目前共 ${lastTwoWrongs.length} 題)`;
         } else {
             btn.style.display = 'none';
         }
     }
 
     function startQuiz(isReview) {
+        isReviewMode = isReview;
         if (isReview) {
             let lastTwoWrongs = [...new Set(wrongHistory.flat())];
             quizPool = allQuestions.filter(q => lastTwoWrongs.includes(q.id));
@@ -123,8 +124,8 @@
             quizPool = (count === "all") ? tempPool : tempPool.slice(0, parseInt(count));
         }
 
+        if (quizPool.length === 0) return alert("沒有題目可供練習！");
         currentIndex = 0;
-        currentSessionWrongs = []; 
         document.getElementById('setup').style.display = 'none';
         document.getElementById('quiz').style.display = 'block';
         showQuestion();
@@ -181,12 +182,26 @@
 
         if (userPick === correctAns) {
             btn.classList.add('correct');
+            // --- 核心優化：如果在複習模式下答對，從所有歷史紀錄中刪除該題 ---
+            if (isReviewMode) {
+                wrongHistory = wrongHistory.map(session => session.filter(id => id !== q.id))
+                                           .filter(session => session.length > 0);
+                localStorage.setItem('wrong_history_v3', JSON.stringify(wrongHistory));
+            }
         } else {
             btn.classList.add('wrong');
             const correctIdx = ['A', 'B', 'C', 'D'].indexOf(correctAns);
             if (correctIdx !== -1) allBtns[correctIdx].classList.add('correct');
-            // 記錄本次答錯的 ID
-            if (!currentSessionWrongs.includes(q.id)) currentSessionWrongs.push(q.id);
+            
+            // 答錯邏輯：如果是非複習模式，將錯題存入「當前最後一輪」
+            if (!isReviewMode) {
+                if (wrongHistory.length === 0) wrongHistory.push([]);
+                let currentSession = wrongHistory[wrongHistory.length - 1];
+                if (!currentSession.includes(q.id)) {
+                    currentSession.push(q.id);
+                }
+                localStorage.setItem('wrong_history_v3', JSON.stringify(wrongHistory));
+            }
         }
 
         if (q.note) {
@@ -203,19 +218,15 @@
             showQuestion();
             window.scrollTo(0,0);
         } else {
-            finishQuiz();
+            if (!isReviewMode) {
+                // 如果是一般模式結束，準備下一輪空的 session
+                if (wrongHistory.length >= 2) wrongHistory.shift(); 
+                wrongHistory.push([]); 
+                localStorage.setItem('wrong_history_v3', JSON.stringify(wrongHistory));
+            }
+            alert("本輪結束！錯題紀錄已更新。");
+            location.reload();
         }
-    }
-
-    function finishQuiz() {
-        // 測驗結束，將本次錯題存入歷史（只保留最近兩次）
-        if (currentSessionWrongs.length > 0) {
-            wrongHistory.push(currentSessionWrongs);
-            if (wrongHistory.length > 2) wrongHistory.shift(); // 只留最後兩次
-            localStorage.setItem('wrong_history_v2', JSON.stringify(wrongHistory));
-        }
-        alert("測驗結束！系統已更新最近兩次的錯題紀錄。");
-        location.reload();
     }
 </script>
 </body>
