@@ -3,50 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工程品管測驗系統 - 標靶抽題版</title>
+    <title>工程品管測驗系統 - 17單元正式版</title>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        
-        /* 設定區樣式 */
         .setup-section { text-align: center; margin-bottom: 30px; padding: 25px; background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; }
-        .form-group { margin-bottom: 20px; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .form-group { margin-bottom: 20px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
         label { display: block; font-weight: bold; margin-bottom: 8px; color: #475569; }
-        select { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #cbd5e1; background: #fff; cursor: pointer; }
-        
-        /* 測驗區樣式 */
+        select { width: 100%; padding: 12px; font-size: 15px; border-radius: 8px; border: 2px solid #cbd5e1; background: #fff; cursor: pointer; }
         .quiz-card { display: none; }
         .question-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px; }
         .unit-tag { background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
         .q-text { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #0f172a; min-height: 60px; }
-        
-        /* 選項 */
         .options-grid { display: grid; gap: 12px; }
-        .opt-btn { padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; text-align: left; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .opt-btn { padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; text-align: left; cursor: pointer; font-size: 16px; transition: 0.2s; width: 100%; }
         .opt-btn:hover:not(:disabled) { border-color: var(--primary); background: #f0f7ff; }
         .opt-btn.correct { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
         .opt-btn.wrong { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
-
-        /* 解析與按鈕 */
         #noteBox { margin-top: 20px; padding: 15px; background: #fff7ed; border-left: 5px solid #f97316; border-radius: 8px; display: none; font-size: 15px; color: #9a3412; }
         .btn { padding: 15px 25px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; width: 100%; margin-top: 15px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-next { background: #334155; color: white; display: none; }
-        
-        #backToTop { position: fixed; bottom: 30px; right: 30px; padding: 12px 18px; background: #64748b; color: white; border: none; border-radius: 50%; display: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        #backToTop { position: fixed; bottom: 30px; right: 30px; padding: 12px 18px; background: #64748b; color: white; border: none; border-radius: 50%; display: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="setup" class="setup-section">
-        <h2 style="color:var(--primary)">🛠️ 工程品管標靶測驗</h2>
+        <h2 style="color:var(--primary)">🛠️ 工程品管標靶測驗系統</h2>
         
         <div class="form-group">
-            <label>1. 選擇單元範圍</label>
+            <label>1. 選擇單元範圍 (1-2878 題)</label>
             <select id="unitSelect">
-                <option value="all">全部單元 (1-2878 題)</option>
+                <option value="all">【全部題目隨機抽】</option>
+                <option value="1-222">1-222：單元二：第三章 品質分析方法與應用</option>
+                <option value="223-402">223-402：單元二：第二章 統計分析方法與應用</option>
+                <option value="403-598">403-598：單元二：第一章 監造計畫與品質計畫指導</option>
+                <option value="599-649">599-649：永續公共工程</option>
+                <option value="650-797">650-797：單元一：第三章 公共工程履約管理</option>
+                <option value="798-1123">798-1123：單元一：第二章 公共工程管理相關法規概要</option>
+                <option value="1124-1221">1124-1221：單元二：第六章 建築工程之界面整合</option>
+                <option value="1222-1382">1222-1382：單元二：第五章 電梯設備工程品質管理</option>
+                <option value="1383-1652">1383-1652：單元二：第四章 消防設備及空調設備工程品質管理實務</option>
+                <option value="1653-1820">1653-1820：單元二：第三章 給排水衛生設備工程品質管理實務</option>
+                <option value="1821-2052">1821-2052：單元二：第二章 弱電(含中央監控)設備工程品質管理實務</option>
+                <option value="2053-2194">2053-2194：單元二：第一章 電氣設備工程品質管理實務</option>
+                <option value="2195-2385">2195-2385：單元二：第六章 工程品質稽核</option>
+                <option value="2386-2606">2386-2606：單元二：第五章 施工管制與檢驗</option>
+                <option value="2607-2836">2607-2836：單元二：第四章 工程進料檢驗與管制</option>
+                <option value="2837-2866">2837-2866：單元一：第一章 公共工程施工品質管理制度理念與導入</option>
+                <option value="2867-2878">2867-2878：政府採購全金命週期概論</option>
             </select>
         </div>
 
@@ -60,19 +68,17 @@
             </select>
         </div>
 
-        <button class="btn btn-primary" onclick="startQuiz()">開始標靶測驗</button>
+        <button class="btn btn-primary" onclick="startQuiz()">開始測驗</button>
     </div>
 
     <div id="quiz" class="quiz-card">
         <div class="question-header">
-            <span id="progress" style="font-weight:bold; color:#64748b;">載入中...</span>
-            <span id="unitTag" class="unit-tag">單元標籤</span>
+            <span id="progress" style="font-weight:bold;">第 1 題</span>
+            <span id="unitTag" class="unit-tag">單元</span>
         </div>
         <div id="qidDisplay" style="font-size:12px; color:#94a3b8; margin-bottom:10px;">ID: --</div>
-        <div id="questionText" class="q-text">題目載入中...</div>
-        
+        <div id="questionText" class="q-text"></div>
         <div id="options" class="options-grid"></div>
-
         <div id="noteBox"></div>
         <button id="nextBtn" class="btn btn-next" onclick="nextQuestion()">下一題</button>
     </div>
@@ -86,40 +92,27 @@
     let quizPool = [];
     let currentIndex = 0;
 
-    // 初始化：自動抓取單元名稱
-    window.onload = () => {
-        const unitSelect = document.getElementById('unitSelect');
-        const units = [...new Set(allQuestions.map(q => q.unit))].filter(Boolean);
-        units.forEach(u => {
-            const opt = document.createElement('option');
-            opt.value = u;
-            opt.textContent = u;
-            unitSelect.appendChild(opt);
-        });
-        
-        window.onscroll = () => {
-            document.getElementById('backToTop').style.display = window.scrollY > 300 ? "block" : "none";
-        };
-    };
-
     function startQuiz() {
-        const unit = document.getElementById('unitSelect').value;
+        const range = document.getElementById('unitSelect').value;
         const count = document.getElementById('countSelect').value;
-        
-        // Step 1: 過濾單元
-        let tempPool = (unit === "all") ? [...allQuestions] : allQuestions.filter(q => q.unit === unit);
-        
-        // Step 2: 隨機打散
-        tempPool.sort(() => Math.random() - 0.5);
-        
-        // Step 3: 擷取題數
-        if (count !== "all") {
-            quizPool = tempPool.slice(0, parseInt(count));
+        let tempPool = [];
+
+        // 邏輯修正：根據選擇的 value (如 1-222) 來切分題庫
+        if (range === "all") {
+            tempPool = [...allQuestions];
         } else {
-            quizPool = tempPool;
+            const [start, end] = range.split('-').map(Number);
+            tempPool = allQuestions.filter(q => {
+                let id = parseInt(q.id);
+                return id >= start && id <= end;
+            });
         }
 
-        if (quizPool.length === 0) return alert("該單元目前沒有題目！");
+        if (tempPool.length === 0) return alert("找不到符合範圍的題目，請檢查題庫檔案。");
+
+        // 隨機打散並取題數
+        tempPool.sort(() => Math.random() - 0.5);
+        quizPool = (count === "all") ? tempPool : tempPool.slice(0, parseInt(count));
 
         currentIndex = 0;
         document.getElementById('setup').style.display = 'none';
@@ -131,16 +124,16 @@
         const q = quizPool[currentIndex];
         const optsDiv = document.getElementById('options');
         const noteBox = document.getElementById('noteBox');
-        const nextBtn = document.getElementById('nextBtn');
-        
         optsDiv.innerHTML = '';
         noteBox.style.display = 'none';
-        nextBtn.style.display = 'none';
+        document.getElementById('nextBtn').style.display = 'none';
         
         document.getElementById('progress').textContent = `進度：${currentIndex + 1} / ${quizPool.length}`;
-        document.getElementById('unitTag').textContent = q.unit;
-        document.getElementById('qidDisplay').textContent = `題號 ID: ${q.id}`;
+        document.getElementById('qidDisplay').textContent = `題目 ID: ${q.id}`;
         document.getElementById('questionText').textContent = q.q;
+
+        // 根據 ID 範圍顯示正確單元名稱（避免資料庫內沒分類）
+        document.getElementById('unitTag').textContent = q.unit || "工程題庫";
 
         ['A', 'B', 'C', 'D'].forEach(label => {
             const btn = document.createElement('button');
@@ -164,12 +157,10 @@
             allBtns[correctIdx].classList.add('correct');
         }
 
-        // 只有在有解析內容時才顯示 noteBox
         if (q.note && q.note.trim() !== "") {
-            noteBox.innerHTML = `<b>💡 關鍵解析：</b><br>${q.note}`;
+            noteBox.innerHTML = `<b>💡 解析筆記：</b><br>${q.note}`;
             noteBox.style.display = 'block';
         }
-
         document.getElementById('nextBtn').style.display = 'block';
     }
 
@@ -179,11 +170,14 @@
             showQuestion();
             window.scrollTo(0,0);
         } else {
-            alert(`測驗結束！您已完成 ${quizPool.length} 題練習。`);
+            alert("測驗結束！");
             location.reload();
         }
     }
-</script>
 
+    window.onscroll = () => {
+        document.getElementById('backToTop').style.display = window.scrollY > 300 ? "block" : "none";
+    };
+</script>
 </body>
 </html>
