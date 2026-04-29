@@ -5,46 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>工程品管測驗系統 - 17單元最終版</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f1f5f9; --text: #1e293b; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .container { max-width: 850px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        
-        /* 設定區 */
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .setup-section { text-align: center; margin-bottom: 30px; padding: 25px; border: 2px solid #e2e8f0; border-radius: 12px; }
-        .form-group { margin-bottom: 20px; text-align: left; max-width: 650px; margin-left: auto; margin-right: auto; }
+        .form-group { margin-bottom: 20px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
         label { display: block; font-weight: bold; margin-bottom: 8px; color: #475569; }
-        select { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #cbd5e1; background: #fff; cursor: pointer; }
-        
-        /* 測驗區 */
+        select { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #cbd5e1; background: #fff; margin-bottom: 10px; }
         .quiz-card { display: none; }
         .question-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px; }
         .unit-tag { background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
-        .q-text { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #0f172a; line-height: 1.5; }
-        
-        /* 選項 */
+        .q-text { font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #0f172a; line-height: 1.6; }
         .options-grid { display: grid; gap: 12px; }
-        .opt-btn { padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; text-align: left; cursor: pointer; font-size: 16px; transition: 0.2s; width: 100%; }
-        .opt-btn:hover:not(:disabled) { border-color: var(--primary); background: #f0f7ff; }
-        .opt-btn.correct { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
-        .opt-btn.wrong { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
-
-        /* 解析與按鈕 */
-        #noteBox { margin-top: 20px; padding: 15px; background: #fff7ed; border-left: 5px solid #f97316; border-radius: 8px; display: none; font-size: 15px; color: #9a3412; }
-        .btn { padding: 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; width: 100%; margin-top: 15px; }
+        .opt-btn { padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 10px; background: white; text-align: left; cursor: pointer; font-size: 16px; width: 100%; transition: 0.2s; }
+        .opt-btn.correct { background: #dcfce7 !important; border-color: #22c55e !important; color: #166534; font-weight: bold; }
+        .opt-btn.wrong { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b; }
+        #noteBox { margin-top: 20px; padding: 15px; background: #fff7ed; border-left: 5px solid #f97316; border-radius: 8px; display: none; color: #9a3412; }
+        .btn { padding: 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; width: 100%; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; }
+        .btn-review { background: #f59e0b; color: white; margin-top: 10px; }
         .btn-next { background: #334155; color: white; display: none; }
-        
-        #backToTop { position: fixed; bottom: 30px; right: 30px; padding: 15px; background: #64748b; color: white; border: none; border-radius: 50%; display: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        #backToTop { position: fixed; bottom: 30px; right: 30px; padding: 15px; background: #64748b; color: white; border-radius: 50%; display: none; cursor: pointer; border:none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="setup" class="setup-section">
-        <h2 style="color:var(--primary); margin-top:0;">🚀 工程品管專業測驗系統</h2>
+        <h2 style="color:var(--primary)">🎓 工程品管測驗系統</h2>
         
         <div class="form-group">
-            <label>1. 選擇單元範圍 (依題號精確分類)</label>
+            <label>1. 選擇單元範圍</label>
             <select id="unitSelect">
                 <option value="all">【全部題目隨機抽】</option>
                 <option value="1-222">1-222：單元二：第三章 品質分析方法與應用</option>
@@ -68,21 +59,22 @@
         </div>
 
         <div class="form-group">
-            <label>2. 選擇隨機抽題數量</label>
+            <label>2. 選擇抽題數量</label>
             <select id="countSelect">
                 <option value="30">隨機抽 30 題</option>
                 <option value="50">隨機抽 50 題</option>
                 <option value="100">隨機抽 100 題</option>
-                <option value="all">該範圍全部題目</option>
+                <option value="all">範圍內全部題目</option>
             </select>
         </div>
 
-        <button class="btn btn-primary" onclick="startQuiz()">開始標靶測驗</button>
+        <button class="btn btn-primary" onclick="startQuiz(false)">開始測驗</button>
+        <button id="reviewBtn" class="btn btn-review" onclick="startQuiz(true)" style="display:none;">📖 錯題複習</button>
     </div>
 
     <div id="quiz" class="quiz-card">
         <div class="question-header">
-            <span id="progress" style="font-weight:bold; color:#64748b;">載入中...</span>
+            <span id="progress">載入中...</span>
             <span id="unitTag" class="unit-tag">工程題庫</span>
         </div>
         <div id="qidDisplay" style="font-size:12px; color:#94a3b8; margin-bottom:10px;">ID: --</div>
@@ -100,30 +92,28 @@
 <script>
     let quizPool = [];
     let currentIndex = 0;
+    // 從 localStorage 取得錯題紀錄
+    let wrongIds = JSON.parse(localStorage.getItem('wrongList') || '[]');
 
-    function startQuiz() {
-        const range = document.getElementById('unitSelect').value;
-        const count = document.getElementById('countSelect').value;
-        let tempPool = [];
+    window.onload = () => {
+        if (wrongIds.length > 0) document.getElementById('reviewBtn').style.display = 'block';
+    };
 
-        // 依據題號區間切分
-        if (range === "all") {
-            tempPool = [...allQuestions];
+    function startQuiz(isReview) {
+        if (isReview) {
+            quizPool = allQuestions.filter(q => wrongIds.includes(q.id));
+            if (quizPool.length === 0) return alert("目前沒有錯題紀錄！");
         } else {
-            const [start, end] = range.split('-').map(Number);
-            tempPool = allQuestions.filter(q => {
+            const range = document.getElementById('unitSelect').value;
+            const count = document.getElementById('countSelect').value;
+            let tempPool = (range === "all") ? [...allQuestions] : allQuestions.filter(q => {
                 let id = parseInt(q.id);
-                return id >= start && id <= end;
+                let [s, e] = range.split('-').map(Number);
+                return id >= s && id <= e;
             });
+            tempPool.sort(() => Math.random() - 0.5);
+            quizPool = (count === "all") ? tempPool : tempPool.slice(0, parseInt(count));
         }
-
-        if (tempPool.length === 0) return alert("錯誤：找不到符合範圍的題目，請檢查 quiz_data.js 內容。");
-
-        // 隨機洗牌
-        tempPool.sort(() => Math.random() - 0.5);
-
-        // 決定題數
-        quizPool = (count === "all") ? tempPool : tempPool.slice(0, parseInt(count));
 
         currentIndex = 0;
         document.getElementById('setup').style.display = 'none';
@@ -134,62 +124,77 @@
     function showQuestion() {
         const q = quizPool[currentIndex];
         const optsDiv = document.getElementById('options');
-        const noteBox = document.getElementById('noteBox');
-        
-        // 重置 UI
         optsDiv.innerHTML = '';
-        noteBox.style.display = 'none';
+        document.getElementById('noteBox').style.display = 'none';
         document.getElementById('nextBtn').style.display = 'none';
         
-        // 填充文字
         document.getElementById('progress').textContent = `進度：${currentIndex + 1} / ${quizPool.length}`;
-        document.getElementById('qidDisplay').textContent = `題目原始 ID: ${q.id}`;
+        document.getElementById('qidDisplay').textContent = `題目 ID: ${q.id}`;
         document.getElementById('questionText').textContent = q.q;
         
-        // 顯示該題所屬單元名稱 (從選單中抓取文字)
-        const unitSelect = document.getElementById('unitSelect');
-        document.getElementById('unitTag').textContent = q.unit || "工程專案";
+        // 抓取當前單元名稱（依照題號顯示，不依賴資料庫內的 unit）
+        const unitLabel = getUnitName(q.id);
+        document.getElementById('unitTag').textContent = unitLabel;
 
-        // 產生 A, B, C, D 選項 (強化：相容大小寫)
+        // 選項處理：你的資料是 o1, o2, o3, o4
         const labels = ['A', 'B', 'C', 'D'];
-        labels.forEach(label => {
-            // 自動偵測 q.A 或 q.a
-            let text = q[label] || q[label.toLowerCase()];
+        for(let i=1; i<=4; i++) {
+            let label = labels[i-1];
+            let text = q['o' + i]; // 抓取 o1, o2...
             
             const btn = document.createElement('button');
             btn.className = 'opt-btn';
-            btn.textContent = `${label}. ${text || "(此題選項資料缺失)"}`;
-            
-            if (!text) {
-                btn.disabled = true;
-                btn.style.opacity = "0.5";
-            } else {
-                btn.onclick = () => checkAnswer(label, btn);
-            }
+            btn.textContent = `${label}. ${text || "（資料缺失）"}`;
+            btn.onclick = () => checkAnswer(i, btn); // 傳入數字 1, 2... 比對 ans
             optsDiv.appendChild(btn);
-        });
+        }
+    }
+
+    function getUnitName(id) {
+        const idNum = parseInt(id);
+        if (idNum >= 1 && idNum <= 222) return "品質分析手法(一)";
+        if (idNum >= 223 && idNum <= 402) return "統計分析手法(二)";
+        if (idNum >= 403 && idNum <= 598) return "監造與品質計畫";
+        if (idNum >= 599 && idNum <= 649) return "永續公共工程";
+        if (idNum >= 650 && idNum <= 797) return "公共工程履約管理";
+        if (idNum >= 798 && idNum <= 1123) return "管理相關法規概要";
+        if (idNum >= 1124 && idNum <= 1221) return "建築工程界面整合";
+        if (idNum >= 1222 && idNum <= 1382) return "電梯設備品質管理";
+        if (idNum >= 1383 && idNum <= 1652) return "消防空調品質管理";
+        if (idNum >= 1653 && idNum <= 1820) return "給排水衛生品質管理";
+        if (idNum >= 1821 && idNum <= 2052) return "弱電監控品質管理";
+        if (idNum >= 2053 && idNum <= 2194) return "電氣設備品質管理";
+        if (idNum >= 2195 && idNum <= 2385) return "工程品質稽核";
+        if (idNum >= 2386 && idNum <= 2606) return "施工管制與檢驗";
+        if (idNum >= 2607 && idNum <= 2836) return "工程進料檢驗管制";
+        if (idNum >= 2837 && idNum <= 2866) return "施工品質制度理念";
+        if (idNum >= 2867 && idNum <= 2878) return "採購全生命週期";
+        return "工程題庫";
     }
 
     function checkAnswer(userPick, btn) {
         const q = quizPool[currentIndex];
         const allBtns = document.querySelectorAll('.opt-btn');
+        const correctAns = parseInt(q.ans); // 你的資料 ans 是數字
         allBtns.forEach(b => b.disabled = true);
-
-        // 標準化正確答案為大寫
-        const correctAns = q.ans.toUpperCase();
 
         if (userPick === correctAns) {
             btn.classList.add('correct');
+            // 如果答對了，就把這題從錯題清單移除
+            wrongIds = wrongIds.filter(id => id !== q.id);
         } else {
             btn.classList.add('wrong');
-            // 找出正確那個並亮綠燈
-            const correctIdx = ['A', 'B', 'C', 'D'].indexOf(correctAns);
-            if (correctIdx !== -1) allBtns[correctIdx].classList.add('correct');
+            allBtns[correctAns - 1].classList.add('correct');
+            // 答錯，加入錯題清單
+            if (!wrongIds.includes(q.id)) {
+                wrongIds.push(q.id);
+            }
         }
+        localStorage.setItem('wrongList', JSON.stringify(wrongIds));
 
-        // 顯示解析 (如果有 note)
         if (q.note && q.note.trim() !== "") {
-            noteBox.innerHTML = `<b>💡 重點筆記：</b><br>${q.note}`;
+            const noteBox = document.getElementById('noteBox');
+            noteBox.innerHTML = `<b>💡 解析：</b><br>${q.note}`;
             noteBox.style.display = 'block';
         }
         document.getElementById('nextBtn').style.display = 'block';
@@ -199,18 +204,16 @@
         currentIndex++;
         if (currentIndex < quizPool.length) {
             showQuestion();
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            window.scrollTo({top:0, behavior:'smooth'});
         } else {
-            alert(`測驗完成！您已練習完這 ${quizPool.length} 題。`);
+            alert("本輪測驗已結束！");
             location.reload();
         }
     }
 
-    // 回到頂部按鈕
     window.onscroll = () => {
         document.getElementById('backToTop').style.display = window.scrollY > 400 ? "block" : "none";
     };
 </script>
-
 </body>
 </html>
