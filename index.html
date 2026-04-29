@@ -11,7 +11,7 @@
         .setup-section { text-align: center; padding: 25px; border: 2px solid #e2e8f0; border-radius: 12px; }
         .form-group { margin-bottom: 20px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
         label { display: block; font-weight: bold; margin-bottom: 8px; }
-        select { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #cbd5e1; }
+        select { width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: 2px solid #cbd5e1; background: #fff; }
         .quiz-card { display: none; }
         .question-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px; }
         .unit-tag { background: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; }
@@ -23,7 +23,7 @@
         #noteBox { margin-top: 20px; padding: 15px; background: #fff7ed; border-left: 5px solid #f97316; border-radius: 8px; display: none; color: #9a3412; }
         .btn { padding: 16px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 18px; width: 100%; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-review { background: #f59e0b; color: white; margin-top: 10px; }
+        .btn-review { background: #f59e0b; color: white; display: none; }
         .btn-next { background: #334155; color: white; display: none; }
     </style>
 </head>
@@ -31,7 +31,7 @@
 
 <div class="container">
     <div id="setup" class="setup-section">
-        <h2 style="color:var(--primary)">🎓 工程品管專業測驗 (17單元版)</h2>
+        <h2 style="color:var(--primary)">🎓 工程品管專業測驗</h2>
         <div class="form-group">
             <label>1. 選擇單元範圍</label>
             <select id="unitSelect">
@@ -61,16 +61,16 @@
                 <option value="30">隨機抽 30 題</option>
                 <option value="50">隨機抽 50 題</option>
                 <option value="100">隨機抽 100 題</option>
-                <option value="all">該範圍全部</option>
+                <option value="all">範圍內全部題目</option>
             </select>
         </div>
         <button class="btn btn-primary" onclick="startQuiz(false)">開始測驗</button>
-        <button id="reviewBtn" class="btn btn-review" onclick="startQuiz(true)" style="display:none;">📖 錯題複習</button>
+        <button id="reviewBtn" class="btn btn-review" onclick="startQuiz(true)">📖 錯題複習 (近二次)</button>
     </div>
 
     <div id="quiz" class="quiz-card">
         <div class="question-header">
-            <span id="progress" style="font-weight:bold;">載入中...</span>
+            <span id="progress">第 1 題</span>
             <span id="unitTag" class="unit-tag">工程單元</span>
         </div>
         <div id="qidDisplay" style="font-size:12px; color:#94a3b8; margin-bottom:10px;">ID: --</div>
@@ -86,15 +86,31 @@
 <script>
     let quizPool = [];
     let currentIndex = 0;
-    let wrongIds = JSON.parse(localStorage.getItem('myWrongList') || '[]');
+    let currentSessionWrongs = []; // 本次測驗的錯題
+
+    // 錯題歷史紀錄 (儲存格式：[ [session1_ids], [session2_ids] ])
+    let wrongHistory = JSON.parse(localStorage.getItem('wrong_history_v2') || '[]');
 
     window.onload = () => {
-        if (wrongIds.length > 0) document.getElementById('reviewBtn').style.display = 'block';
+        updateReviewButton();
     };
+
+    function updateReviewButton() {
+        // 合併最近兩次的錯題 ID
+        let lastTwoWrongs = [...new Set(wrongHistory.flat())];
+        const btn = document.getElementById('reviewBtn');
+        if (lastTwoWrongs.length > 0) {
+            btn.style.display = 'block';
+            btn.innerText = `📖 錯題複習 (共 ${lastTwoWrongs.length} 題)`;
+        } else {
+            btn.style.display = 'none';
+        }
+    }
 
     function startQuiz(isReview) {
         if (isReview) {
-            quizPool = allQuestions.filter(q => wrongIds.includes(q.id));
+            let lastTwoWrongs = [...new Set(wrongHistory.flat())];
+            quizPool = allQuestions.filter(q => lastTwoWrongs.includes(q.id));
         } else {
             const range = document.getElementById('unitSelect').value;
             const count = document.getElementById('countSelect').value;
@@ -107,8 +123,8 @@
             quizPool = (count === "all") ? tempPool : tempPool.slice(0, parseInt(count));
         }
 
-        if (quizPool.length === 0) return alert("沒有題目！");
         currentIndex = 0;
+        currentSessionWrongs = []; 
         document.getElementById('setup').style.display = 'none';
         document.getElementById('quiz').style.display = 'block';
         showQuestion();
@@ -127,16 +143,13 @@
         document.getElementById('unitTag').textContent = getUnitName(q.id);
 
         const labels = ['A', 'B', 'C', 'D'];
-        if (q.o && Array.isArray(q.o)) {
-            q.o.forEach((text, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'opt-btn';
-                // --- 關鍵修正：不再手動加標籤，直接顯示 text (因為 text 裡面已經有 (A) 了) ---
-                btn.textContent = text; 
-                btn.onclick = () => checkAnswer(labels[index], btn);
-                optsDiv.appendChild(btn);
-            });
-        }
+        q.o.forEach((text, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.textContent = text; 
+            btn.onclick = () => checkAnswer(labels[index], btn);
+            optsDiv.appendChild(btn);
+        });
     }
 
     function getUnitName(id) {
@@ -168,14 +181,13 @@
 
         if (userPick === correctAns) {
             btn.classList.add('correct');
-            wrongIds = wrongIds.filter(id => id !== q.id);
         } else {
             btn.classList.add('wrong');
             const correctIdx = ['A', 'B', 'C', 'D'].indexOf(correctAns);
             if (correctIdx !== -1) allBtns[correctIdx].classList.add('correct');
-            if (!wrongIds.includes(q.id)) wrongIds.push(q.id);
+            // 記錄本次答錯的 ID
+            if (!currentSessionWrongs.includes(q.id)) currentSessionWrongs.push(q.id);
         }
-        localStorage.setItem('myWrongList', JSON.stringify(wrongIds));
 
         if (q.note) {
             const noteBox = document.getElementById('noteBox');
@@ -191,9 +203,19 @@
             showQuestion();
             window.scrollTo(0,0);
         } else {
-            alert("測驗完成！");
-            location.reload();
+            finishQuiz();
         }
+    }
+
+    function finishQuiz() {
+        // 測驗結束，將本次錯題存入歷史（只保留最近兩次）
+        if (currentSessionWrongs.length > 0) {
+            wrongHistory.push(currentSessionWrongs);
+            if (wrongHistory.length > 2) wrongHistory.shift(); // 只留最後兩次
+            localStorage.setItem('wrong_history_v2', JSON.stringify(wrongHistory));
+        }
+        alert("測驗結束！系統已更新最近兩次的錯題紀錄。");
+        location.reload();
     }
 </script>
 </body>
