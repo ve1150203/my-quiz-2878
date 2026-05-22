@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>線上模擬測驗 - 終極統計題庫版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>線上模擬測驗 - 免滑動全固定版</title>
     <style>
         :root {
             --primary: #2b6cb0;
@@ -17,13 +17,33 @@
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        body { background-color: var(--bg); margin: 0; padding-top: 260px; padding-bottom: 60px; color: #2d3748; }
+        /* 💡 核心改版：鎖定整個視窗不亂滾動 */
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            background-color: var(--bg); 
+            color: #2d3748;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
         
-        .top-panel { position: fixed; top: 0; left: 0; right: 0; background: white; padding: 12px 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 1000; max-width: 600px; margin: 0 auto; }
-        .top-panel h2 { margin: 0 0 8px 0; font-size: 1.2rem; color: var(--primary); text-align: center; }
+        /* 💡 上方控制面板：固定在頂部 */
+        .top-panel { 
+            background: white; 
+            padding: 10px 15px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
+            z-index: 1000; 
+            max-width: 600px; 
+            width: 100%;
+            margin: 0 auto; 
+            flex-shrink: 0;
+        }
+        .top-panel h2 { margin: 0 0 6px 0; font-size: 1.1rem; color: var(--primary); text-align: center; }
         
-        .row { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-        select, button, input { padding: 10px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.95rem; font-weight: bold; width: 100%; }
+        .row { display: flex; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+        select, button, input { padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e0; font-size: 0.9rem; font-weight: bold; width: 100%; }
         select { background: white; flex: 1; min-width: 0; } 
         button { background: var(--primary); color: white; border: none; cursor: pointer; }
         button:active { opacity: 0.8; }
@@ -32,15 +52,26 @@
         .btn-review { background: #b7791f; flex: 1; }
         .btn-heavy-wrong { background: #e53e3e; flex: 1; }
         
-        .history-box { display: none; font-size: 0.82rem; background: #edf2f7; padding: 6px 10px; border-radius: 6px; text-align: center; font-weight: 500; color: #4a5568; line-height: 1.4; margin-top: 5px; word-break: break-all; }
+        .history-box { display: none; font-size: 0.78rem; background: #edf2f7; padding: 4px 8px; border-radius: 6px; text-align: center; font-weight: 500; color: #4a5568; margin-top: 4px; word-break: break-all; }
 
-        .container { max-width: 600px; margin: 0 auto; padding: 0 5px; }
-        .quiz-card { background: white; padding: 18px; margin-top: 10px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-left: 4px solid #cbd5e0; }
+        /* 💡 中間獨立滾動區：只有題目太長時這裡會內部滾動，按鈕絕對不動 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; /* 讓手機滾動平滑 */
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 10px 12px;
+        }
+
+        .quiz-card { background: white; padding: 14px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border-left: 4px solid #cbd5e0; }
         
-        .q-title { font-size: 1.05rem; margin-bottom: 15px; line-height: 1.5; color: #2d3748; font-weight: 500; }
-        .q-num { font-size: 1.25rem; font-weight: 800; color: #1a365d; margin-right: 6px; display: inline-block; }
+        .q-title { font-size: 1rem; margin-bottom: 12px; line-height: 1.4; color: #2d3748; font-weight: 500; }
+        .q-num { font-size: 1.15rem; font-weight: 800; color: #1a365d; margin-right: 4px; display: inline-block; }
         
-        .option-label { display: block; font-size: 0.95rem; margin: 8px 0; padding: 12px 15px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; background: #fff; transition: background 0.15s; }
+        /* 稍微縮小選項內襯，降低高度佔用 */
+        .option-label { display: block; font-size: 0.9rem; margin: 6px 0; padding: 10px 12px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; background: #fff; transition: background 0.15s; }
         .option-label:hover { background: #f7fafc; }
         
         .quiz-card.answered .option-label { pointer-events: none; }
@@ -48,25 +79,33 @@
         .option-label.correct-target { background-color: var(--success-bg) !important; color: var(--success-text) !important; font-weight: bold; border: 1px solid var(--success-border) !important; }
         .option-label.wrong-target { background-color: var(--error-bg) !important; color: var(--error-text) !important; border: 1px solid var(--error-border) !important; }
 
-        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; font-size: 0.8rem; color: #a0aec0; gap: 5px; flex-wrap: wrap; }
-        .footer-left { display: flex; flex-direction: column; gap: 4px; }
-        .course-tag { color: #718096; background: #edf2f7; padding: 3px 8px; border-radius: 4px; font-weight: normal; width: fit-content; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 0.75rem; color: #a0aec0; gap: 5px; flex-wrap: wrap; }
+        .footer-left { display: flex; flex-direction: column; gap: 2px; }
+        .course-tag { color: #718096; background: #edf2f7; padding: 2px 6px; border-radius: 4px; font-weight: normal; width: fit-content; }
         .orig-id { color: #a0aec0; font-family: monospace; font-weight: bold; display: flex; align-items: center; }
-        .stat-tag { color: #718096; font-weight: bold; background: #f7fafc; border: 1px dashed #cbd5e0; padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; }
+        .stat-tag { color: #718096; font-weight: bold; background: #f7fafc; border: 1px dashed #cbd5e0; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
         
-        .score-banner { background: #fffaf0; border: 2px dashed #dd6b20; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; display: none; font-weight: bold; color: #dd6b20; font-size: 1.2rem; }
+        .score-banner { background: #fffaf0; border: 2px dashed #dd6b20; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 10px; display: none; font-weight: bold; color: #dd6b20; font-size: 1.1rem; }
         
-        .control-row { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; padding-bottom: 30px; }
-        .btn-next { background: #48bb78; font-size: 1.1rem; width: 100%; display: none; padding: 12px; }
-        .btn-abandon { background: #718096; font-size: 0.95rem; width: 100%; display: none; padding: 10px; }
+        /* 💡 底部動作面板：強制永久固定在螢幕最下方 */
+        .bottom-panel {
+            background: white;
+            padding: 8px 15px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+            z-index: 1000;
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            flex-shrink: 0;
+            display: flex;
+            gap: 8px;
+        }
+        .btn-next { background: #48bb78; font-size: 1rem; padding: 10px; flex: 2; display: none; }
+        .btn-abandon { background: #718096; font-size: 0.85rem; padding: 10px; flex: 1; display: none; }
 
         @media (max-width: 500px) {
-            body { padding-top: 310px; }
-            .row:nth-child(2) { flex-direction: column; gap: 6px; }
-            .row:nth-child(2) select { width: 100%; flex: none; }
-            button { font-size: 0.85rem; padding: 10px 4px; }
-            .quiz-card { margin-top: 5px; margin-bottom: 20px; }
-            .history-box { font-size: 0.8rem; padding: 6px; }
+            .row:nth-child(2) { flex-wrap: nowrap; gap: 4px; }
+            button { font-size: 0.8rem; padding: 8px 2px; }
         }
     </style>
 </head>
@@ -76,28 +115,28 @@
         <h2 id="panel-title">📝 線上模擬測驗</h2>
         <div class="row">
             <select id="course-select"><option value="all">全部課程 (載入中...)</option></select>
-            <select id="amount-select">
-                <option value="30">隨機 30 題</option>
-                <option value="50">隨機 50 題</option>
-                <option value="100">隨機 100 題</option>
+            <select id="amount-select" style="max-width: 110px;">
+                <option value="30">30 題</option>
+                <option value="50">50 題</option>
+                <option value="100">100 題</option>
             </select>
         </div>
         <div class="row">
-            <button class="btn-start" onclick="startExam(0)">🚀 開始測驗</button>
-            <button id="review-nav-btn" class="btn-review" onclick="startExam(1)">⚠️ 錯題複習 (0)</button>
-            <button id="heavy-nav-btn" class="btn-heavy-wrong" onclick="startExam(2)">🔥 常錯題庫 (0)</button>
+            <button class="btn-start" onclick="startExam(0)">🚀 開始</button>
+            <button id="review-nav-btn" class="btn-review" onclick="startExam(1)">⚠️ 錯題 (0)</button>
+            <button id="heavy-nav-btn" class="btn-heavy-wrong" onclick="startExam(2)">🔥 魔王 (0)</button>
         </div>
         <div class="history-box" id="history-box"></div>
     </div>
 
-    <div class="container">
+    <div class="main-content">
         <div id="score-banner" class="score-banner"></div>
         <div id="quiz-list"></div>
-        
-        <div class="control-row">
-            <button id="next-btn" class="btn-next" onclick="nextQuestion()">➡️ 下一題</button>
-            <button id="abandon-btn" class="btn-abandon" onclick="submitExam(true)">🏳️ 放棄此挑戰 (提前結算)</button>
-        </div>
+    </div>
+
+    <div class="bottom-panel">
+        <button id="abandon-btn" class="btn-abandon" onclick="submitExam(true)">🏳️ 放棄</button>
+        <button id="next-btn" class="btn-next" onclick="nextQuestion()">➡️ 下一題</button>
     </div>
 
     <script src="questions.js"></script>
@@ -116,14 +155,12 @@
             return array;
         }
 
-        // 從包含 HTML 標籤的原始 id 中安全提取「開頭的純數字」（例如 "1 <small>..." 轉為 "1"）
         function getPureId(rawId) {
             if (!rawId) return "";
             let clean = String(rawId).split('<')[0]; 
             return clean.replace(/[^0-9]/g, '').trim();
         }
 
-        // 排除 Excel 欄位頭部資訊
         function getCleanQuestions() {
             if (typeof allQuestions === 'undefined' || !Array.isArray(allQuestions)) return [];
             return allQuestions.filter(q => {
@@ -136,12 +173,11 @@
         }
 
         window.onload = function() {
-            // 💡 核心修正：初次載入時，自動清洗不相容的舊版本 localStorage 殘留，避免計數器幽靈數字
             validateAndSanitizeLocalStorage();
 
             const cleanData = getCleanQuestions();
             if (cleanData.length === 0) {
-                alert('無法讀取到題庫！請確認 questions.js 檔案是否跟此網頁放在同一個資料夾。'); 
+                alert('無法讀取到題庫！請確認 questions.js 是否在同資料夾。'); 
                 return;
             }
             
@@ -167,22 +203,18 @@
             updateReviewButtonCount();
         };
 
-        // 💡 檢查並修復可能導致計數衝突的舊快取資料
         function validateAndSanitizeLocalStorage() {
             const cleanData = getCleanQuestions();
             const validPureIds = cleanData.map(q => getPureId(q.id));
 
-            // 1. 驗證錯題本
             let wrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
             let updatedWrongList = wrongList.filter(id => validPureIds.includes(String(id)));
             localStorage.setItem('quiz_wrong_list', JSON.stringify(updatedWrongList));
 
-            // 2. 驗證常錯題庫
             let heavyList = JSON.parse(localStorage.getItem('quiz_heavy_wrong_list')) || [];
             let updatedHeavyList = heavyList.filter(id => validPureIds.includes(String(id)));
             localStorage.setItem('quiz_heavy_wrong_list', JSON.stringify(updatedHeavyList));
 
-            // 3. 驗證歷史成績紀錄格式
             let history = JSON.parse(localStorage.getItem('quiz_history')) || [];
             let needCleanHistory = history.some(h => !h || h.score === undefined || h.course === "undefined" || String(h.score).includes('undefined'));
             if (needCleanHistory) { localStorage.removeItem('quiz_history'); }
@@ -195,17 +227,17 @@
                 box.style.display = 'none'; 
             } else {
                 box.style.display = 'block'; 
-                const historyString = history.map((h, i) => `第 ${i+1} 次：${h.score}分 / ${h.total}題`).join(' ； ');
-                box.innerHTML = `🏆 最近測驗分數：${historyString}`;
+                const historyString = history.map((h, i) => `${h.score}分/${h.total}題`).join(' ； ');
+                box.innerHTML = `🏆 歷史：${historyString}`;
             }
         }
 
         function updateReviewButtonCount() {
             const wrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
-            document.getElementById('review-nav-btn').textContent = `⚠️ 錯題複習 (${wrongList.length})`;
+            document.getElementById('review-nav-btn').textContent = `⚠️ 錯題 (${wrongList.length})`;
             
             const heavyList = JSON.parse(localStorage.getItem('quiz_heavy_wrong_list')) || [];
-            document.getElementById('heavy-nav-btn').textContent = `🔥 常錯題庫 (${heavyList.length})`;
+            document.getElementById('heavy-nav-btn').textContent = `🔥 魔王 (${heavyList.length})`;
             
             updateHistoryUI(); 
         }
@@ -241,7 +273,6 @@
                 let shuffledPool = shuffle([...basePool]);
                 examQuestions = shuffledPool.slice(0, Math.min(amount, shuffledPool.length));
 
-                // 統計常錯題庫判定專用的內部計數 (維持原有邏輯)
                 let stats = JSON.parse(localStorage.getItem('quiz_question_stats')) || {};
                 examQuestions.forEach(q => {
                     let pId = getPureId(q.id);
@@ -257,7 +288,6 @@
             document.getElementById('abandon-btn').style.display = 'block'; 
         }
 
-        // 讀取「每題獨立歷史統計文字」
         function getEachQuestionStatsText(pureId) {
             let eachStats = JSON.parse(localStorage.getItem('quiz_each_question_stats')) || {};
             if (eachStats[pureId] && eachStats[pureId].appear > 0) {
@@ -274,11 +304,11 @@
             listContainer.innerHTML = '';
             document.getElementById('next-btn').style.display = 'none'; 
 
-            let modeText = "📝 線上模擬測驗";
-            if (examMode === 1) modeText = "⚠️ 錯題複習中";
-            if (examMode === 2) modeText = "🔥 常錯魔王題複習中";
+            let modeText = "📝 模擬測驗";
+            if (examMode === 1) modeText = "⚠️ 錯題複習";
+            if (examMode === 2) modeText = "🔥 魔王複習";
             
-            document.getElementById('panel-title').textContent = `${modeText} (${currentQuestionIndex + 1} / ${examQuestions.length})`;
+            document.getElementById('panel-title').textContent = `${modeText} (${currentQuestionIndex + 1}/${examQuestions.length})`;
 
             const q = examQuestions[currentQuestionIndex];
             const card = document.createElement('div');
@@ -305,15 +335,8 @@
             `;
             listContainer.appendChild(card);
 
-            setTimeout(() => {
-                const panel = document.querySelector('.top-panel');
-                if (panel) {
-                    window.scrollTo({
-                        top: panel.offsetHeight - 10,
-                        behavior: 'smooth'
-                    });
-                }
-            }, 60);
+            // 💡 每次切換題目，中間內容區自動滾回最上方
+            document.querySelector('.main-content').scrollTop = 0;
         }
 
         function selectOption(element, pId, chosenOpt) {
@@ -322,26 +345,19 @@
             card.classList.add('answered'); 
 
             const q = examQuestions[currentQuestionIndex];
-            // 剔除 (A) 等前綴干擾，精準比對字母答案
             const correctOpt = q.ans.trim().toUpperCase().replace(/[^A-D]/g, ''); 
             const isCorrect = (chosenOpt === correctOpt);
 
             userAnswers[pId] = { chosen: chosenOpt, isCorrect: isCorrect };
 
-            // 💡 增加每題獨立歷史數據統計 (出現次數、正確率，且完全不干涉常錯題庫判定)
             let eachStats = JSON.parse(localStorage.getItem('quiz_each_question_stats')) || {};
             if (!eachStats[pId]) eachStats[pId] = { appear: 0, correct: 0 };
             eachStats[pId].appear += 1;
-            if (isCorrect) {
-                eachStats[pId].correct += 1;
-            }
+            if (isCorrect) { eachStats[pId].correct += 1; }
             localStorage.setItem('quiz_each_question_stats', JSON.stringify(eachStats));
 
-            // 即時渲染更新該題的歷史統計數據小標籤
             const statTag = document.getElementById(`stat-tag-${pId}`);
-            if (statTag) {
-                statTag.textContent = `📊 ${getEachQuestionStatsText(pId)}`;
-            }
+            if (statTag) { statTag.textContent = `📊 ${getEachQuestionStatsText(pId)}`; }
 
             const labels = card.getElementsByClassName('option-label');
             const optMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
@@ -356,9 +372,7 @@
                 }
             } else {
                 element.classList.add('wrong-target'); 
-                if (optMap[correctOpt] !== undefined) {
-                    labels[optMap[correctOpt]].classList.add('correct-target'); 
-                }
+                if (optMap[correctOpt] !== undefined) { labels[optMap[correctOpt]].classList.add('correct-target'); }
                 
                 if (examMode === 0) {
                     let currentWrongList = JSON.parse(localStorage.getItem('quiz_wrong_list')) || [];
@@ -370,7 +384,6 @@
                     let stats = JSON.parse(localStorage.getItem('quiz_question_stats')) || {};
                     if (!stats[pId]) stats[pId] = { appear: 1, wrong: 0 };
                     stats[pId].wrong += 1;
-                    localStorage.setItem('quiz_checkpoint', 'pass'); 
                     localStorage.setItem('quiz_question_stats', JSON.stringify(stats));
                     
                     if (stats[pId].appear >= 3 && stats[pId].wrong >= 3) {
@@ -411,12 +424,7 @@
             if (examMode === 0 && totalAnswered > 0) {
                 const selectedCourse = document.getElementById('course-select').value;
                 let history = JSON.parse(localStorage.getItem('quiz_history')) || [];
-                history.unshift({
-                    course: selectedCourse,
-                    score: score,
-                    correctCount: correctCount,
-                    total: totalQuestions
-                });
+                history.unshift({ course: selectedCourse, score: score, correctCount: correctCount, total: totalQuestions });
                 if(history.length > 3) history.pop(); 
                 localStorage.setItem('quiz_history', JSON.stringify(history));
             }
@@ -431,20 +439,20 @@
             banner.style.display = 'block';
 
             if (examMode === 1) {
-                banner.innerHTML = `🏁 錯題複習結束！<br>本次答對的題目已成功移出錯題本。`;
+                banner.innerHTML = `🏁 錯題複習結束！<br>本次答對的題目已成功移出。`;
             } else if (examMode === 2) {
-                banner.innerHTML = `🏁 常錯魔王題複習結束！<br>這裡的魔王題<b>「永遠不會消失」</b>，多看幾次保證拿高分！`;
+                banner.innerHTML = `🏁 魔王題複習結束！<br>多看幾次保證拿高分！`;
             } else {
-                const titleText = isAbandon ? "🏳️ 已中途放棄挑戰！" : "🏁 挑戰成功！";
-                banner.innerHTML = `${titleText}<br>最終得分：${score} 分 / 總分 ${totalQuestions} 分<br>(共作答 ${totalAnswered} 題，答對 ${correctCount} 題)`;
+                const titleText = isAbandon ? "🏳️ 已中途放棄！" : "🏁 挑戰成功！";
+                banner.innerHTML = `${titleText}<br>最終得分：${score} 分 / 總分 ${totalQuestions} 分<br>(作答 ${totalAnswered} 題，答對 ${correctCount} 題)`;
             }
 
-            let modeText = "📝 線上模擬測驗";
+            let modeText = "📝 模擬測驗";
             if (examMode === 1) modeText = "⚠️ 錯題複習";
-            if (examMode === 2) modeText = "🔥 常錯題庫";
+            if (examMode === 2) modeText = "🔥 魔王題";
             document.getElementById('panel-title').textContent = `${modeText} (已結束)`;
             
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.querySelector('.main-content').scrollTop = 0;
         }
     </script>
 </body>
