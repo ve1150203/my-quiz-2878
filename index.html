@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>線上模擬測驗 - 免滑動全固定版</title>
+    <title>線上模擬測驗 - 獨立隨機統計版</title>
     <style>
         :root {
             --primary: #2b6cb0;
@@ -17,7 +17,6 @@
         }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
         
-        /* 💡 核心改版：鎖定整個視窗不亂滾動 */
         html, body { 
             height: 100%; 
             margin: 0; 
@@ -29,7 +28,6 @@
             flex-direction: column;
         }
         
-        /* 💡 上方控制面板：固定在頂部 */
         .top-panel { 
             background: white; 
             padding: 10px 15px; 
@@ -54,11 +52,10 @@
         
         .history-box { display: none; font-size: 0.78rem; background: #edf2f7; padding: 4px 8px; border-radius: 6px; text-align: center; font-weight: 500; color: #4a5568; margin-top: 4px; word-break: break-all; }
 
-        /* 💡 中間獨立滾動區：只有題目太長時這裡會內部滾動，按鈕絕對不動 */
         .main-content {
             flex: 1;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* 讓手機滾動平滑 */
+            -webkit-overflow-scrolling: touch;
             width: 100%;
             max-width: 600px;
             margin: 0 auto;
@@ -70,7 +67,6 @@
         .q-title { font-size: 1rem; margin-bottom: 12px; line-height: 1.4; color: #2d3748; font-weight: 500; }
         .q-num { font-size: 1.15rem; font-weight: 800; color: #1a365d; margin-right: 4px; display: inline-block; }
         
-        /* 稍微縮小選項內襯，降低高度佔用 */
         .option-label { display: block; font-size: 0.9rem; margin: 6px 0; padding: 10px 12px; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; background: #fff; transition: background 0.15s; }
         .option-label:hover { background: #f7fafc; }
         
@@ -87,7 +83,6 @@
         
         .score-banner { background: #fffaf0; border: 2px dashed #dd6b20; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 10px; display: none; font-weight: bold; color: #dd6b20; font-size: 1.1rem; }
         
-        /* 💡 底部動作面板：強制永久固定在螢幕最下方 */
         .bottom-panel {
             background: white;
             padding: 8px 15px;
@@ -144,7 +139,7 @@
     <script>
         let examQuestions = []; 
         let currentQuestionIndex = 0; 
-        let examMode = 0; 
+        let examMode = 0; // 0:隨機測驗, 1:錯題複習, 2:常錯魔王題
         let userAnswers = {}; 
 
         function shuffle(array) {
@@ -273,6 +268,7 @@
                 let shuffledPool = shuffle([...basePool]);
                 examQuestions = shuffledPool.slice(0, Math.min(amount, shuffledPool.length));
 
+                // 💡 只有在隨機測驗（Mode 0）時，才在抽題當下累加常錯題庫判定專用的內部計數
                 let stats = JSON.parse(localStorage.getItem('quiz_question_stats')) || {};
                 examQuestions.forEach(q => {
                     let pId = getPureId(q.id);
@@ -335,7 +331,6 @@
             `;
             listContainer.appendChild(card);
 
-            // 💡 每次切換題目，中間內容區自動滾回最上方
             document.querySelector('.main-content').scrollTop = 0;
         }
 
@@ -350,14 +345,18 @@
 
             userAnswers[pId] = { chosen: chosenOpt, isCorrect: isCorrect };
 
-            let eachStats = JSON.parse(localStorage.getItem('quiz_each_question_stats')) || {};
-            if (!eachStats[pId]) eachStats[pId] = { appear: 0, correct: 0 };
-            eachStats[pId].appear += 1;
-            if (isCorrect) { eachStats[pId].correct += 1; }
-            localStorage.setItem('quiz_each_question_stats', JSON.stringify(eachStats));
+            // 💡 核心邏輯修正：只有在隨機測驗（examMode === 0）時，作答才累積「出現次數與正確率」
+            if (examMode === 0) {
+                let eachStats = JSON.parse(localStorage.getItem('quiz_each_question_stats')) || {};
+                if (!eachStats[pId]) eachStats[pId] = { appear: 0, correct: 0 };
+                eachStats[pId].appear += 1;
+                if (isCorrect) { eachStats[pId].correct += 1; }
+                localStorage.setItem('quiz_each_question_stats', JSON.stringify(eachStats));
 
-            const statTag = document.getElementById(`stat-tag-${pId}`);
-            if (statTag) { statTag.textContent = `📊 ${getEachQuestionStatsText(pId)}`; }
+                // 隨機測驗時，即時渲染更新小標籤
+                const statTag = document.getElementById(`stat-tag-${pId}`);
+                if (statTag) { statTag.textContent = `📊 ${getEachQuestionStatsText(pId)}`; }
+            }
 
             const labels = card.getElementsByClassName('option-label');
             const optMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
@@ -444,7 +443,7 @@
                 banner.innerHTML = `🏁 魔王題複習結束！<br>多看幾次保證拿高分！`;
             } else {
                 const titleText = isAbandon ? "🏳️ 已中途放棄！" : "🏁 挑戰成功！";
-                banner.innerHTML = `${titleText}<br>最終得分：${score} 分 / 總分 ${totalQuestions} 分<br>(作答 ${totalAnswered} 題，答對 ${correctCount} 題)`;
+                banner.innerHTML = `${titleText}<br>最終得分：${score} 分 / 總分 ${totalQuestions} 分<br>(共作答 ${totalAnswered} 題，答對 ${correctCount} 題)`;
             }
 
             let modeText = "📝 模擬測驗";
